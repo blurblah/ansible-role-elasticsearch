@@ -2,3 +2,6 @@
 version: 6.2.3
 cluster:
   name: es_cluster
+min_master_nodes: 1
+java:
+  heapsize: 1g

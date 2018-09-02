@@ -6,11 +6,18 @@
     name: vm.max_map_count
     value: 262144
 
-- name: Make a data directory to be mounted and grant access permissions
+- name: Make a data/config directory to be mounted and grant access permissions
   shell: |
     mkdir -p /usr/share/elasticsearch/data
     chmod g+rwx /usr/share/elasticsearch/data
+    mkdir -p /usr/share/elasticsearch/config
+    chmod g+rwx /usr/share/elasticsearch/config
 #    chgrp 0 /usr/share/elasticsearch/data
+
+- name: Create default configuration files for elasticsearch
+  template:
+    src: elasticsearch.yml.j2
+    dest: /usr/share/elasticsearch/config/elasticsearch.yml
 
 - name: 'Run elasticsearch docker container version {{ version }}'
   docker_container:
@@ -21,11 +28,11 @@
       - 9300:9300
     volumes:
       - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
+      - /usr/share/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     env:
-      cluster.name: '{{ cluster.name }}'
       bootstrap.memory_lock: 'true'
-      ES_JAVA_OPTS: '-Xms1g -Xmx1g'
-    log_driver: syslog
+      ES_JAVA_OPTS: '-Xms{{ java.heapsize }} -Xmx{{ java.heapsize }}'
+    #log_driver: syslog
     ulimits:
       - memlock:-1:-1
       - nofile:65536:65536
